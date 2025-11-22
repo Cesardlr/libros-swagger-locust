@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
+from flasgger import Swagger
 import os
 from dotenv import load_dotenv
 from auth import bp as auth_bp, check_if_token_revoked
@@ -28,6 +29,56 @@ CORS(app, origins=cors_origins, supports_credentials=True)
 @jwt.token_in_blocklist_loader
 def check_if_token_in_blocklist(jwt_header, jwt_payload):
     return check_if_token_revoked(jwt_header, jwt_payload)
+
+# Configure Swagger
+swagger_config = {
+    "headers": [],
+    "specs": [
+        {
+            "endpoint": "apispec",
+            "route": "/apispec.json",
+            "rule_filter": lambda rule: True,
+            "model_filter": lambda tag: True,
+        }
+    ],
+    "static_url_path": "/flasgger_static",
+    "swagger_ui": True,
+    "specs_route": "/api-docs"
+}
+
+swagger_template = {
+    "swagger": "2.0",
+    "info": {
+        "title": "Books API - Sistema de Gestión de Libros",
+        "description": "API REST para gestión de libros con autenticación JWT y almacenamiento de imágenes en Firebase Storage",
+        "version": "1.0.0",
+        "contact": {
+            "name": "API Support"
+        }
+    },
+    "basePath": "/",
+    "schemes": ["http", "https"],
+    "securityDefinitions": {
+        "Bearer": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header",
+            "description": "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\""
+        }
+    },
+    "tags": [
+        {
+            "name": "Authentication",
+            "description": "Endpoints de autenticación y gestión de usuarios"
+        },
+        {
+            "name": "Books",
+            "description": "Endpoints para gestión de libros (CRUD)"
+        }
+    ]
+}
+
+swagger = Swagger(app, config=swagger_config, template=swagger_template)
 
 # Register blueprints
 app.register_blueprint(auth_bp, url_prefix='/auth')

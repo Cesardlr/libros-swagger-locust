@@ -62,7 +62,63 @@ def revoke(jti, exp):
 
 @bp.route('/register', methods=['POST'])
 def register():
-    """Register a new user."""
+    """Register a new user.
+    ---
+    tags:
+      - Authentication
+    summary: Registrar un nuevo usuario
+    description: Crea un nuevo usuario en el sistema. La contraseña se hashea con SHA-256 antes de almacenarse.
+    consumes:
+      - application/json
+    produces:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        description: Datos del usuario a registrar
+        required: true
+        schema:
+          type: object
+          required:
+            - username
+            - password
+          properties:
+            username:
+              type: string
+              description: Nombre de usuario (único)
+              example: "usuario123"
+            password:
+              type: string
+              description: Contraseña del usuario
+              example: "password123"
+    responses:
+      201:
+        description: Usuario registrado exitosamente
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+              example: "User registered successfully"
+      400:
+        description: Datos faltantes o inválidos
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+              example: "Username and password required"
+      409:
+        description: El nombre de usuario ya existe
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+              example: "Username already exists"
+      500:
+        description: Error interno del servidor
+    """
     try:
         data = request.get_json()
         username = data.get('username')
@@ -96,7 +152,71 @@ def register():
 
 @bp.route('/login', methods=['POST'])
 def login():
-    """Login user and generate tokens."""
+    """Login user and generate tokens.
+    ---
+    tags:
+      - Authentication
+    summary: Iniciar sesión
+    description: Autentica un usuario y genera tokens JWT (access y refresh). Los tokens se almacenan en Redis.
+    consumes:
+      - application/json
+    produces:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        description: Credenciales de acceso
+        required: true
+        schema:
+          type: object
+          required:
+            - username
+            - password
+          properties:
+            username:
+              type: string
+              description: Nombre de usuario
+              example: "usuario123"
+            password:
+              type: string
+              description: Contraseña del usuario
+              example: "password123"
+    responses:
+      200:
+        description: Login exitoso, tokens generados
+        schema:
+          type: object
+          properties:
+            access_token:
+              type: string
+              description: Token JWT de acceso (válido por 15 minutos por defecto)
+              example: "eyJ0eXAiOiJKV1QiLCJhbGc..."
+            refresh_token:
+              type: string
+              description: Token JWT de refresco (válido por 30 días por defecto)
+              example: "eyJ0eXAiOiJKV1QiLCJhbGc..."
+            username:
+              type: string
+              example: "usuario123"
+      400:
+        description: Datos faltantes
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+              example: "Username and password required"
+      401:
+        description: Credenciales inválidas
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+              example: "Invalid credentials"
+      500:
+        description: Error interno del servidor
+    """
     try:
         data = request.get_json()
         username = data.get('username')
@@ -143,7 +263,37 @@ def login():
 @bp.route('/refresh', methods=['POST'])
 @jwt_required(refresh=True)
 def refresh():
-    """Refresh access token."""
+    """Refresh access token.
+    ---
+    tags:
+      - Authentication
+    summary: Renovar token de acceso
+    description: Genera un nuevo token de acceso usando el refresh token. Requiere autenticación con refresh token.
+    security:
+      - Bearer: []
+    produces:
+      - application/json
+    responses:
+      200:
+        description: Nuevo token de acceso generado
+        schema:
+          type: object
+          properties:
+            access_token:
+              type: string
+              description: Nuevo token JWT de acceso
+              example: "eyJ0eXAiOiJKV1QiLCJhbGc..."
+      401:
+        description: Token inválido o expirado
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+              example: "Token has been revoked"
+      500:
+        description: Error interno del servidor
+    """
     try:
         current_user = get_jwt_identity()
         new_access_token = create_access_token(identity=current_user)
@@ -161,7 +311,36 @@ def refresh():
 @bp.route('/logout', methods=['POST'])
 @jwt_required()
 def logout():
-    """Logout user by revoking tokens."""
+    """Logout user by revoking tokens.
+    ---
+    tags:
+      - Authentication
+    summary: Cerrar sesión
+    description: Revoca los tokens del usuario actual, agregándolos a la blocklist de Redis.
+    security:
+      - Bearer: []
+    produces:
+      - application/json
+    responses:
+      200:
+        description: Sesión cerrada exitosamente
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+              example: "Successfully logged out"
+      401:
+        description: Token inválido o no autenticado
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+              example: "Token has been revoked"
+      500:
+        description: Error interno del servidor
+    """
     try:
         jti = get_jwt()['jti']
         exp = get_jwt()['exp']

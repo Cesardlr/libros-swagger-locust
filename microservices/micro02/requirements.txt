@@ -5,3 +5,5 @@ PyMySQL==1.1.0
 redis==5.0.1
 python-dotenv==1.0.0
 firebase-admin==6.4.0
+locust==2.17.0
+flasgger==0.9.7.1

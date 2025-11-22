@@ -158,6 +158,48 @@ python -m http.server 8080
 
 Abrir en el navegador: http://localhost:8080
 
+## Documentación de API con Swagger
+
+El proyecto incluye documentación interactiva de la API usando Swagger (Flasgger).
+
+### Acceder a la Documentación
+
+Una vez que el servidor esté ejecutándose, accede a:
+
+**http://127.0.0.1:5000/api-docs**
+
+La interfaz de Swagger UI permite:
+
+- Ver todos los endpoints disponibles
+- Probar los endpoints directamente desde el navegador
+- Ver ejemplos de requests y responses
+- Autenticarte con JWT tokens para probar endpoints protegidos
+
+### Usar Swagger para Probar Endpoints
+
+1. **Registrar un usuario**:
+
+   - Ve a `/auth/register`
+   - Haz clic en "Try it out"
+   - Ingresa username y password
+   - Ejecuta la petición
+
+2. **Iniciar sesión**:
+
+   - Ve a `/auth/login`
+   - Ingresa las credenciales
+   - Copia el `access_token` de la respuesta
+
+3. **Autenticar en Swagger**:
+
+   - Haz clic en el botón "Authorize" en la parte superior
+   - Ingresa: `Bearer {tu_access_token}`
+   - Haz clic en "Authorize"
+
+4. **Probar endpoints protegidos**:
+   - Ahora puedes probar todos los endpoints de libros
+   - Swagger incluirá automáticamente el token en las peticiones
+
 ## API Endpoints
 
 ### Autenticación
@@ -176,6 +218,8 @@ Abrir en el navegador: http://localhost:8080
 - `POST /api/books/create` - Crear nuevo libro
 - `PUT /api/books/update` - Actualizar libro
 - `DELETE /api/books/delete?isbn=...` - Eliminar libro
+
+**Nota**: Para ver la documentación completa con ejemplos, parámetros y respuestas, visita http://127.0.0.1:5000/api-docs
 
 ## Funcionalidades del Cliente Web
 
@@ -217,7 +261,92 @@ Abrir en el navegador: http://localhost:8080
 - Verificar que `redis-server` esté ejecutándose en puerto 6379
 - Comprobar configuración de Redis en `.env`
 
-## Flujo de Pruebas
+## Pruebas de Carga con Locust
+
+El proyecto incluye configuración de Locust para realizar pruebas de carga y rendimiento.
+
+### Instalación
+
+```bash
+cd microservices/micro02
+pip install -r requirements.txt
+```
+
+### Ejecutar Pruebas de Carga
+
+**Opción 1: Interfaz Web (Recomendado)**
+
+```bash
+cd microservices/micro02
+locust -f locustfile.py --host=http://127.0.0.1:5000
+```
+
+Luego abre tu navegador en: http://localhost:8089
+
+En la interfaz web puedes configurar:
+
+- **Number of users**: Número de usuarios simultáneos
+- **Spawn rate**: Usuarios por segundo a agregar
+- **Host**: URL del servidor (ya configurado)
+
+**Opción 2: Línea de Comandos (Sin UI)**
+
+```bash
+cd microservices/micro02
+locust -f locustfile.py --host=http://127.0.0.1:5000 --headless -u 10 -r 2 -t 60s
+```
+
+Parámetros:
+
+- `-u 10`: 10 usuarios simultáneos
+- `-r 2`: Agregar 2 usuarios por segundo
+- `-t 60s`: Ejecutar por 60 segundos
+
+**Opción 3: Generar Reporte HTML**
+
+```bash
+locust -f locustfile.py --host=http://127.0.0.1:5000 --headless -u 50 -r 5 -t 2m --html report.html
+```
+
+### Endpoints Probados
+
+El archivo `locustfile.py` incluye pruebas para:
+
+**Autenticación:**
+
+- Registro de usuarios
+- Login
+- Refresh token
+- Logout
+
+**Libros:**
+
+- GET todos los libros (peso: 3 - más frecuente)
+- GET libro por ISBN (peso: 2)
+- GET libros por formato (peso: 2)
+- GET libros por autor (peso: 1)
+- POST crear libro (peso: 1)
+- PUT actualizar libro (peso: 1)
+- DELETE eliminar libro (peso: 1, probabilidad 10%)
+
+### Interpretar Resultados
+
+En la interfaz web de Locust verás:
+
+- **Total Requests**: Total de peticiones realizadas
+- **Failures**: Peticiones fallidas
+- **RPS**: Requests por segundo
+- **Response Times**: Tiempos de respuesta (mediana, promedio, p95, p99)
+- **Number of Users**: Usuarios activos
+
+### Recomendaciones
+
+- **Pruebas iniciales**: Comienza con 10-20 usuarios
+- **Pruebas de estrés**: Incrementa gradualmente hasta encontrar el límite
+- **Monitoreo**: Observa el uso de CPU, memoria y conexiones de base de datos
+- **Redis**: Asegúrate de que Redis pueda manejar el número de tokens generados
+
+## Flujo de Pruebas Manuales
 
 1. **Registrar usuario**: POST `/auth/register`
 2. **Iniciar sesión**: POST `/auth/login` → recibe tokens
@@ -227,7 +356,7 @@ Abrir en el navegador: http://localhost:8080
 
 ## Tecnologías Utilizadas
 
-- **Backend**: Flask, Flask-JWT-Extended, PyMySQL, Redis, Firebase Admin SDK
+- **Backend**: Flask, Flask-JWT-Extended, PyMySQL, Redis, Firebase Admin SDK, Flasgger (Swagger)
 - **Frontend**: HTML5, CSS3, JavaScript (ES6+)
 - **Base de datos**: MariaDB/MySQL
 - **Cache/Sesión**: Redis
