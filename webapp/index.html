@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Libros API - Cliente Web</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Sistema de Gestión de Libros</h1>
+            <div class="auth-section">
+                <div id="login-form" class="auth-form">
+                    <h3>Iniciar Sesión</h3>
+                    <input type="text" id="username" placeholder="Usuario" required>
+                    <input type="password" id="password" placeholder="Contraseña" required>
+                    <button onclick="login()">Iniciar Sesión</button>
+                    <button onclick="showRegister()">Registrarse</button>
+                </div>
+                
+                <div id="register-form" class="auth-form" style="display: none;">
+                    <h3>Registrarse</h3>
+                    <input type="text" id="reg-username" placeholder="Usuario" required>
+                    <input type="password" id="reg-password" placeholder="Contraseña" required>
+                    <button onclick="register()">Registrarse</button>
+                    <button onclick="showLogin()">Ya tengo cuenta</button>
+                </div>
+                
+                <div id="user-info" style="display: none;">
+                    <span id="welcome-user"></span>
+                    <button onclick="logout()">Cerrar Sesión</button>
+                </div>
+            </div>
+        </header>
+
+        <main id="main-content" style="display: none;">
+            <div class="controls">
+                <button onclick="loadBooks()">Cargar Todos los Libros</button>
+                <button onclick="showSearchForm()">Buscar Libros</button>
+                <button onclick="showCreateForm()">Agregar Libro</button>
+            </div>
+
+            <div id="search-form" class="form-section" style="display: none;">
+                <h3>Buscar Libros</h3>
+                <div class="search-options">
+                    <input type="text" id="search-isbn" placeholder="ISBN">
+                    <button onclick="searchByISBN()">Buscar por ISBN</button>
+                </div>
+                <div class="search-options">
+                    <input type="text" id="search-author" placeholder="Autor">
+                    <button onclick="searchByAuthor()">Buscar por Autor</button>
+                </div>
+                <div class="search-options">
+                    <select id="search-format">
+                        <option value="">Seleccionar Formato</option>
+                        <option value="Físico">Físico</option>
+                        <option value="Digital">Digital</option>
+                        <option value="Audiolibro">Audiolibro</option>
+                    </select>
+                    <button onclick="searchByFormat()">Buscar por Formato</button>
+                </div>
+            </div>
+
+            <div id="create-form" class="form-section" style="display: none;">
+                <h3>Agregar Nuevo Libro</h3>
+                <input type="text" id="create-isbn" placeholder="ISBN" required>
+                <input type="text" id="create-title" placeholder="Título" required>
+                <input type="text" id="create-author" placeholder="Autor" required>
+                <select id="create-format" required>
+                    <option value="">Seleccionar Formato</option>
+                    <option value="Físico">Físico</option>
+                    <option value="Digital">Digital</option>
+                    <option value="Audiolibro">Audiolibro</option>
+                </select>
+                <input type="number" id="create-price" placeholder="Precio" step="0.01" required>
+                <textarea id="create-description" placeholder="Descripción (opcional)"></textarea>
+                <div class="image-upload-section">
+                    <label for="create-image-file" class="upload-label">
+                        <span>📷 Subir Imagen del Libro</span>
+                        <input type="file" id="create-image-file" accept="image/*" style="display: none;" onchange="handleImageFileSelect(event)">
+                    </label>
+                    <div id="image-preview-container" style="display: none; margin-top: 10px;">
+                        <img id="image-preview" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid #e2e8f0;">
+                        <button type="button" onclick="clearImagePreview()" style="margin-left: 10px; padding: 5px 10px; background: #e53e3e; color: white; border: none; border-radius: 5px; cursor: pointer;">Eliminar</button>
+                    </div>
+                    <input type="text" id="create-image-url" placeholder="O ingrese URL de Imagen (opcional)" style="margin-top: 10px;">
+                </div>
+                <button type="button" onclick="createBook()">Crear Libro</button>
+            </div>
+
+            <div id="books-container">
+                <h3>Lista de Libros</h3>
+                <div id="books-list"></div>
+            </div>
+        </main>
+
+        <div id="logs" class="logs-section">
+            <h3>Logs del Sistema</h3>
+            <div id="log-content"></div>
+        </div>
+    </div>
+
+    <!-- Load Firebase config first -->
+    <script type="module" src="firebase-config.js"></script>
+    <!-- Then load main script -->
+    <script src="script.js"></script>
+</body>
+</html>
+
+
